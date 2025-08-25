@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="user-select-enabled" content="true">
+    <meta name="description" content="nevrqx для общения и обмена информацией">
+    <meta name="theme-color" content="#6c5ce7">
+    <title>nevrqx</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.0-rc.2/dist/quill.snow.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <h1><i class="fas fa-bolt"></i><span class="site-name">nevrqx</span></h1>
+                </a>
+                <button id="loginBtn" class="login-btn" title="Войти"><i class="fas fa-user-shield"></i><span class="btn-text">Вход</span></button>
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Поиск по ключевым словам...">
+                        <button id="search-button"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="main-content">
+            <div class="posts-header">
+                <h2><i class="fas fa-newspaper"></i> Последние публикации</h2>
+                <div class="posts-controls">
+                    <div class="pagination">
+                        <button id="prevPage" class="pagination-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                        <span id="currentPage">1</span> / <span id="totalPages">1</span>
+                        <button id="nextPage" class="pagination-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="posts-container">
+                <!-- Здесь будут отображаться посты -->
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка публикаций...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Админ панель (скрыта по умолчанию) -->
+    <div id="admin-panel" class="hidden">
+        <div class="admin-content">
+            <div class="admin-header">
+                <h2><i class="fas fa-cog"></i> Панель администратора</h2>
+                <div class="admin-buttons-top">
+                    <button id="newPostBtn" title="Создать публикацию"><i class="fas fa-file-circle-plus"></i><span class="btn-text">Создать публикацию</span></button>
+                    <button id="closeAdminBtn" title="Закрыть"><i class="fas fa-xmark"></i></button>
+                </div>
+            </div>
+            
+            <div id="editor-container" class="hidden">
+                <input type="text" id="post-title" placeholder="Заголовок публикации">
+                <div class="password-container">
+                    <input type="password" id="post-password" placeholder="Пароль для доступа к публикации (оставьте пустым, если пароль не нужен)">
+                    <div class="password-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Если указан пароль, публикация будет доступна только после его ввода</span>
+                    </div>
+                </div>
+                <div id="editor"></div>
+                <div class="button-group">
+                    <button id="savePostBtn" title="Сохранить"><i class="fas fa-floppy-disk"></i><span class="btn-text">Сохранить</span></button>
+                    <button id="cancelPostBtn" title="Отмена"><i class="fas fa-ban"></i><span class="btn-text">Отмена</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для входа -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-user-lock"></i> Вход в панель администратора</h2>
+            <div class="input-group">
+                <i class="fas fa-key input-icon"></i>
+                <input type="password" id="password" placeholder="Введите пароль">
+            </div>
+            <button id="submitPassword" title="Войти"><i class="fas fa-sign-in-alt"></i><span class="btn-text">Войти</span></button>
+            <p id="login-error" class="error hidden"><i class="fas fa-exclamation-circle"></i> Неверный пароль</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно для ввода имени -->
+    <div id="name-modal" class="modal name-modal hidden">
+        <div class="modal-content">
+            <span class="close-name-modal">&times;</span>
+            <div class="name-modal-header">
+                <h2><i class="fas fa-user-circle"></i> Представьтесь</h2>
+            </div>
+            <p>Добро пожаловать на наш портал! Чтобы оставлять комментарии, пожалуйста, укажите ваше имя. Оно будет сохранено и использовано для всех ваших комментариев.</p>
+            <div class="input-group">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" id="author-name" placeholder="Введите ваше имя">
+            </div>
+            <button id="submit-name" title="Сохранить"><i class="fas fa-check-circle"></i><span class="btn-text">Сохранить</span></button>
+            <p id="name-error" class="error hidden"><i class="fas fa-exclamation-circle"></i> Пожалуйста, введите имя</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно для вставки изображения по URL -->
+    <div id="image-url-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-image-modal">&times;</span>
+            <h2><i class="fas fa-image"></i> Вставка изображения</h2>
+            <div class="input-group">
+                <i class="fas fa-link input-icon"></i>
+                <input type="text" id="image-url" placeholder="Введите URL изображения">
+            </div>
+            <div class="image-preview-container hidden">
+                <h3>Предпросмотр:</h3>
+                <div class="image-preview"></div>
+            </div>
+            <div class="button-group">
+                <button id="preview-image-btn" title="Предпросмотр"><i class="fas fa-eye"></i><span class="btn-text">Предпросмотр</span></button>
+                <button id="insert-image-btn" title="Вставить" disabled><i class="fas fa-plus"></i><span class="btn-text">Вставить</span></button>
+            </div>
+            <p id="image-url-error" class="error hidden"><i class="fas fa-exclamation-circle"></i> Пожалуйста, введите корректный URL изображения</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно результатов поиска -->
+    <div id="search-results-modal" class="modal search-modal hidden">
+        <div class="modal-content search-results-content">
+            <button class="close-search-results" title="Закрыть" type="button" aria-label="Закрыть поиск"><i class="fas fa-times"></i></button>
+            <h2><i class="fas fa-search"></i> Результаты поиска</h2>
+            <div id="search-query-display"></div>
+            <div id="search-results-container"></div>
+            <div id="no-results" class="hidden">
+                <i class="fas fa-search-minus"></i>
+                <p>По вашему запросу ничего не найдено. Попробуйте изменить запрос или использовать другие ключевые слова.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для ввода пароля к посту -->
+    <div id="password-modal">
+        <div class="password-modal-content">
+            <h3><i class="fas fa-lock"></i> Требуется пароль</h3>
+            <p>Эта публикация защищена паролем. Пожалуйста, введите пароль для доступа к содержимому.</p>
+            <div class="input-group">
+                <input type="password" id="post-access-password" placeholder="Введите пароль">
+            </div>
+            <div class="password-modal-buttons">
+                <button id="submit-password-btn"><i class="fas fa-check-circle"></i> Подтвердить</button>
+                <button id="cancel-password-btn"><i class="fas fa-times-circle"></i> Отмена</button>
+            </div>
+            <p id="password-error">Неверный пароль. Пожалуйста, попробуйте еще раз.</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно для загрузки фотографий -->
+    <div id="upload-photo-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-upload-modal">&times;</span>
+            <h2><i class="fas fa-camera"></i> Загрузка фотографии</h2>
+            <div class="upload-area">
+                <div class="upload-preview-container">
+                    <div class="upload-preview"></div>
+                </div>
+                <div class="upload-buttons">
+                    <label class="file-input-label">
+                        <input type="file" id="photo-file-input" accept="image/*">
+                        <i class="fas fa-upload"></i> Выбрать файл
+                    </label>
+                    <div class="upload-progress hidden">
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <span class="progress-text">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="upload-photo-btn" disabled><i class="fas fa-check"></i><span class="btn-text">Загрузить</span></button>
+            </div>
+            <p id="upload-error" class="error hidden"><i class="fas fa-exclamation-circle"></i> Ошибка загрузки</p>
+            </div>
+</div>
+
+<!-- Модальное окно чата -->
+<div id="chat-modal" class="chat-modal">
+    <div id="chat-container" class="chat-container">
+        <div class="chat-header">
+            <h2><i class="fas fa-comments"></i> Общий чат</h2>
+            <button id="close-chat" class="close-chat" title="Закрыть"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <!-- Контейнер для загрузки старых сообщений -->
+            <div id="load-more-container" class="load-more-container hidden">
+                <button id="load-more-btn" class="load-more-btn">
+                    <i class="fas fa-chevron-up"></i> Загрузить предыдущие сообщения
+                </button>
+            </div>
+            
+            <!-- Здесь будут сообщения чата -->
+            <div id="messages-list"></div>
+            
+            <!-- Заглушка для пустого чата -->
+            <div id="empty-chat" class="empty-chat">
+                <i class="fas fa-comments"></i>
+                <p>Пока нет сообщений. Будьте первым, кто начнет общение!</p>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Введите сообщение..." maxlength="500">
+            <button id="send-message-btn" class="send-message-btn" disabled style="position: relative !important; z-index: 999999 !important;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка чата -->
+<button id="chat-button" class="chat-button" title="Открыть чат">
+    <i class="fas fa-comments"></i>
+    <span id="chat-notification" class="chat-notification">0</span>
+</button>
+
+<footer>
+    <div class="container">
+        <p><i class="far fa-copyright"></i> 2025 0xLeaks</p>
+    </div>
+</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0-rc.2/dist/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        console.log('Загрузка скриптов...');
+    </script>
+    <script src="script.js"></script>
+    <script>
+        console.log('script.js загружен');
+        console.log('supabaseClient доступен:', window.supabaseClient ? 'Да' : 'Нет');
+    </script>
+    <script src="chat.js"></script>
+    <script src="chat-button.js"></script>
+    <script src="debug.js"></script>
+    <script src="simple-chat.js"></script>
+    <script src="simple-chat-send.js"></script>
+    <script src="inline-chat-button.js"></script>
+    <script>
+        console.log('Все скрипты загружены');
+    </script>
+    
+    <!-- PWA регистрация Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker зарегистрирован успешно:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Ошибка регистрации Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Добавляем баннер для установки PWA
+        let deferredPrompt;
+        const addBtn = document.createElement('button');
+        addBtn.style.display = 'none';
+        addBtn.className = 'pwa-install-btn';
+        addBtn.innerHTML = '<i class="fas fa-download"></i> Установить приложение';
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Предотвращаем автоматический показ диалога установки
+            e.preventDefault();
+            // Сохраняем событие, чтобы вызвать его позже
+            deferredPrompt = e;
+            // Показываем кнопку установки
+            addBtn.style.display = 'block';
+            
+            // Добавляем кнопку на страницу
+            const header = document.querySelector('header .container');
+            if (header) {
+                header.appendChild(addBtn);
+            }
+            
+            // Обработчик клика для кнопки установки
+            addBtn.addEventListener('click', () => {
+                // Показываем диалог установки
+                deferredPrompt.prompt();
+                // Ждем ответа пользователя
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Пользователь установил приложение');
+                        // Скрываем кнопку установки
+                        addBtn.style.display = 'none';
+                    }
+                    // Сбрасываем deferredPrompt
+                    deferredPrompt = null;
+                });
+            });
+        });
+        
+        // Добавляем стили для кнопки установки
+        const style = document.createElement('style');
+        style.textContent = `
+            .pwa-install-btn {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-left: 10px;
+                display: flex;
+                align-items: center;
+                font-weight: bold;
+                font-size: 14px;
+                transition: background-color 0.3s;
+            }
+            
+            .pwa-install-btn i {
+                margin-right: 8px;
+            }
+            
+            .pwa-install-btn:hover {
+                background-color: #2980b9;
+            }
+            
+            @media (max-width: 767px) {
+                .pwa-install-btn {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 999;
+                    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
