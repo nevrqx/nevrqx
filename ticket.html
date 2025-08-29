@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Тикет — nevrqx</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="./style.css" />
+  <script>
+    // Немедленный редирект в SPA-маршрут, чтобы не использовать legacy ticket.html
+    (function(){
+      try {
+        const qs = new URLSearchParams(location.search);
+        const id = qs.get('id');
+        const admin = qs.get('admin');
+        if (admin === '1') {
+          try { localStorage.setItem('nvx_is_admin', '1'); } catch(_) {}
+        }
+        if (id) {
+          location.replace(`./index.html#/ticket/${encodeURIComponent(id)}`);
+        } else {
+          location.replace(`./index.html#/profile`);
+        }
+      } catch(_) {
+        // в худшем случае просто уйдём на главную SPA
+        location.replace('./index.html#/profile');
+      }
+    })();
+  </script>
+  <meta http-equiv="refresh" content="1;url=./index.html#/profile" />
+</head>
+<body>
+  Переход в интерфейс тикета... Если не произошло автоматически, откройте <a href="./index.html#/profile">index.html</a>.
+  <noscript>
+    Для работы тикетов требуется JavaScript. Откройте <a href="./index.html#/profile">index.html</a>.
+  </noscript>
+</body>
+</html>
