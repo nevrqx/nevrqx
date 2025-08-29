@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>nevrqx — публикации и комментарии</title>
+  <meta name="description" content="nevrqx — минималистичный блог с умной системой комментариев на Supabase" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container row gap-sm align-center between">
+      <div class="brand row align-center gap-sm">
+        <div class="logo">n</div>
+        <div>
+          <div class="site-title">nevrqx</div>
+          <div class="site-subtitle">Современная платформа публикаций</div>
+        </div>
+      </div>
+      <div class="nav">
+        <a href="#/">Главная</a>
+        <div class="search-container">
+          <input type="search" id="globalSearch" placeholder="Поиск по сайту..." />
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </div>
+        <a href="#/admin">Админ</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Главная: список постов (обновлённый дизайн) -->
+    <section id="route-home" class="route full-bleed">
+      <div id="posts" class="posts-grid"></div>
+      <div id="homeEmpty" class="home-empty" hidden>
+        <div class="icon">📝</div>
+        <div class="text">Пока нет постов.</div>
+      </div>
+    </section>
+
+    <!-- Просмотр поста -->
+    <section id="route-post" class="route full-bleed" hidden>
+      <article id="postView" class="post">
+        <div class="post-cover" id="postCover" hidden></div>
+        <h1 id="postTitle">Заголовок</h1>
+        <div class="muted" id="postMeta"></div>
+        <div id="postContent" class="prose"></div>
+        <div class="tags" id="postTags"></div>
+      </article>
+
+      <section class="comments">
+        <h2>Комментарии</h2>
+        <div class="row gap-sm wrap">
+          <select id="commentSort">
+            <option value="top">Сначала лучшие</option>
+            <option value="new">Сначала новые</option>
+          </select>
+        </div>
+        <div id="commentsLoading" class="loading-text" hidden>
+          <div class="loading-spinner"></div>
+          Загрузка комментариев...
+        </div>
+        <div id="commentsList" class="comment-tree"></div>
+        <div id="commentsPagination" class="comments-pagination"></div>
+        <form id="commentForm" class="card">
+          <div class="row gap-sm">
+            <input type="text" id="commentName" placeholder="Ваше имя" autocomplete="name" />
+          </div>
+          <textarea id="commentBody" rows="4" placeholder="Напишите комментарий…"></textarea>
+          <div class="row between align-center">
+            <button class="btn primary" type="submit">Отправить</button>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <!-- Админ-панель -->
+    <section id="route-admin" class="route full-bleed" hidden>
+      <!-- Форма входа -->
+      <div id="adminAuth" class="admin-login-container">
+        <div class="admin-login-card">
+          <div class="admin-login-header">
+            <div class="admin-icon">🔐</div>
+            <h2>Панель администратора</h2>
+            <p>Войдите для управления публикациями</p>
+          </div>
+          <form id="loginForm" class="admin-login-form">
+            <div class="input-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="admin@example.com" autocomplete="username" required />
+            </div>
+            <div class="input-group">
+              <label for="password">Пароль</label>
+              <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+            </div>
+            <button class="btn primary login-btn" type="submit">
+              <span>Войти в панель</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M21 12H9"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Панель управления -->
+      <div id="adminPanel" class="admin-dashboard" hidden>
+        <div class="container">
+          <!-- Заголовок панели -->
+          <div class="dashboard-header">
+            <div class="dashboard-title">
+              <h1>Панель управления</h1>
+              <p>Управление публикациями и контентом</p>
+            </div>
+            <div class="dashboard-actions">
+              <button id="newPostBtn" class="btn primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Новый пост
+              </button>
+              <button id="logoutBtn" class="btn ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                Выйти
+              </button>
+            </div>
+          </div>
+
+          <!-- Фильтры и поиск (перемещены во вкладку "Посты") -->
+
+          <!-- Admin Tabs -->
+          <div class="dashboard-tabs">
+            <button class="tab-btn active" data-admin-tab="posts">Посты</button>
+            <button class="tab-btn" data-admin-tab="comments">Комментарии</button>
+            <button class="tab-btn" data-admin-tab="settings">Настройки</button>
+          </div>
+
+          <!-- Раздел: Посты -->
+          <section id="adminSectionPosts" class="admin-section">
+            <div class="dashboard-filters">
+              <div class="filters-group">
+                <div class="filter-item">
+                  <label>Статус</label>
+                  <select id="statusFilter">
+                    <option value="">Все статусы</option>
+                    <option value="draft">📝 Черновики</option>
+                    <option value="scheduled">⏰ Запланированные</option>
+                    <option value="published">✅ Опубликованные</option>
+                  </select>
+                </div>
+                <div class="filter-item">
+                  <label>Поиск</label>
+                  <input id="adminSearch" type="search" placeholder="Поиск по заголовкам и тегам..." />
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-content">
+              <div id="adminPosts" class="posts-table"></div>
+            </div>
+          </section>
+
+          <!-- Раздел: Комментарии -->
+          <section id="adminSectionComments" class="admin-section" hidden>
+            <div class="dashboard-header">
+              <div class="dashboard-title">
+                <h2>Комментарии</h2>
+                <p>Просмотр, ответы администратора и модерация</p>
+              </div>
+            </div>
+            <div class="dashboard-content wide">
+              <div class="dashboard-filters">
+                <div class="filters-group">
+                  <div class="filter-item">
+                    <label>Сортировка</label>
+                    <select id="adminCommentSort">
+                      <option value="desc">Новые сверху</option>
+                      <option value="asc">Старые сверху</option>
+                    </select>
+                  </div>
+                  <div class="filter-item">
+                    <label>Статус</label>
+                    <select id="adminCommentAnswered">
+                      <option value="all">Все</option>
+                      <option value="unanswered">Без ответа</option>
+                      <option value="answered">С ответом</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div id="adminCommentsList" class="comments-admin-list"></div>
+            </div>
+          </section>
+
+          <!-- Раздел: Настройки (заглушка) -->
+          <section id="adminSectionSettings" class="admin-section" hidden>
+            <div class="dashboard-header">
+              <div class="dashboard-title">
+                <h2>Настройки</h2>
+                <p>Глобальные параметры проекта (скоро)</p>
+              </div>
+            </div>
+            <div class="dashboard-content wide">
+              <div class="muted">Раздел настроек будет добавлен позже.</div>
+            </div>
+          </section>
+
+          <dialog id="editorDialog">
+          <form id="editorForm" method="dialog" class="editor column gap-md">
+            <div class="row between align-center">
+              <h3 id="editorTitle">Новый пост</h3>
+              <button class="btn ghost" id="closeEditor" type="button">✕</button>
+            </div>
+            <div class="grid-2 gap-md">
+              <input type="text" id="post_title" placeholder="Заголовок" required />
+              <input type="text" id="post_slug" placeholder="Слаг (url-дружелюбно)" />
+            </div>
+            <input type="text" id="post_description" maxlength="200" placeholder="Короткое описание (тизер до 200 символов)" />
+            <input type="url" id="post_cover_url" placeholder="URL обложки (необязательно)" />
+            <textarea id="post_content" rows="14" placeholder="Содержимое (поддерживается Markdown)"></textarea>
+            <div class="row gap-md wrap">
+              <label class="row gap-xs align-center">
+                <span>Статус</span>
+                <select id="post_status">
+                  <option value="draft">черновик</option>
+                  <option value="published">опубликовать</option>
+                  <option value="scheduled">запланировать</option>
+                </select>
+              </label>
+              <label class="row gap-xs align-center">
+                <div class="toggle-switch">
+                  <input type="checkbox" id="toggle_schedule" />
+                  <span class="toggle-slider"></span>
+                </div>
+                <span>Запланировать публикацию</span>
+              </label>
+              <label class="row gap-xs align-center hidden" id="schedule_wrap"><span>Дата/время</span><input type="datetime-local" id="post_scheduled_at" /></label>
+              <label class="row gap-xs align-center">
+                <span>Закрепить</span>
+                <input type="checkbox" id="post_pinned" />
+              </label>
+            </div>
+            <div class="row between">
+              <button class="btn danger" id="deletePostBtn" type="button" hidden>Удалить</button>
+              <button class="btn primary" id="savePostBtn" type="submit">Сохранить</button>
+            </div>
+          </form>
+        </dialog>
+
+        <!-- Themed dialogs for admin actions -->
+        <dialog id="confirmDialog" class="modal">
+          <form method="dialog" class="modal-card">
+            <div class="modal-header">
+              <h3 id="confirmTitle">Подтверждение</h3>
+              <button class="btn ghost" value="cancel" aria-label="Закрыть">✕</button>
+            </div>
+            <div class="modal-body" id="confirmMessage">Вы уверены?</div>
+            <div class="modal-actions">
+              <button class="btn" value="cancel">Отмена</button>
+              <button class="btn danger" value="ok" autofocus>Удалить</button>
+            </div>
+          </form>
+        </dialog>
+
+        <dialog id="promptDialog" class="modal">
+          <form method="dialog" class="modal-card">
+            <div class="modal-header">
+              <h3 id="promptTitle">Ответ администратора</h3>
+              <button class="btn ghost" value="cancel" aria-label="Закрыть">✕</button>
+            </div>
+            <div class="modal-body column gap-sm">
+              <label class="small" for="promptInput">Текст ответа администратора:</label>
+              <textarea id="promptInput" rows="4" placeholder="Введите текст…"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn" value="cancel">Отмена</button>
+              <button class="btn primary" value="ok" autofocus>Отправить</button>
+            </div>
+          </form>
+        </dialog>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container row between align-center">
+      <div class="muted small">© <span id="year"></span> nevrqx</div>
+      <div class="muted small">Все права защищены</div>
+    </div>
+  </footer>
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase credentials injected by assistant
+    window.SUPABASE_URL = 'https://ubyveomgijyjudfwrtdw.supabase.co';
+    window.SUPABASE_ANON_KEY = 'sb_publishable_Y-S2Aslm0eISSlsXB4Um0A_M0Mip6IE';
+    window.ADMIN_EMAIL = 'nevrqx@gmail.com';
+  </script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
